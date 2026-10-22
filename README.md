@@ -289,11 +289,3 @@ The tests cover implemented API functionality, including health checks, authenti
 This project was developed as a take-home assignment. Add a license only if you intend to distribute the project under its terms.
 
 ---
-
-## Before you push to GitHub
-
-- [ ] Replace `YOUR_GITHUB_REPOSITORY_URL` with the real repository URL.
-- [ ] Confirm the project structure and API response examples match your actual code.
-- [ ] Confirm the test count is still 12 passing (`npx vitest run`).
-- [ ] Make sure `.env` files and database credentials are excluded from Git.
-- [ ] Add screenshots of the login and dashboard to make the README more attractive.
