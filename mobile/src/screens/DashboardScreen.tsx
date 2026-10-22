@@ -10,9 +10,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import * as SecureStore from "expo-secure-store";
 import { useFocusEffect } from "expo-router";
 import { apiRequest } from "../api/client";
+import { colors, typography, spacing, radii, shadows, sizes } from "../theme";
 
 type Loan = {
   id: string;
@@ -150,272 +152,511 @@ export default function DashboardScreen({
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color="#176B52" />
-        <Text style={styles.muted}>Loading your ledger...</Text>
-      </SafeAreaView>
+      <LinearGradient
+        colors={[colors.bgGradientTop, colors.bgGradientBottom]}
+        style={styles.gradientFill}
+      >
+        <SafeAreaView style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading your ledger…</Text>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.eyebrow}>YOUR PERSONAL LEDGER</Text>
-          <Text style={styles.title}>MiniLedger</Text>
-        </View>
-        <TouchableOpacity onPress={logout} style={styles.logout}>
-          <Text style={styles.logoutText}>Log out</Text>
-        </TouchableOpacity>
-      </View>
-
-      <FlatList
-        data={loans}
-        keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refresh} />
-        }
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={
+    <LinearGradient
+      colors={[colors.bgGradientTop, colors.bgGradientBottom]}
+      style={styles.gradientFill}
+    >
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
           <View>
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Total lent</Text>
-              <Text style={styles.total}>
-                ₹{summary.totalLent.toLocaleString("en-IN")}
-              </Text>
+            <Text style={styles.eyebrow}>YOUR PERSONAL LEDGER</Text>
+            <Text style={styles.title}>MiniLedger</Text>
+          </View>
+          <TouchableOpacity onPress={logout} style={styles.logoutPill}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </TouchableOpacity>
+        </View>
 
-              <View style={styles.summaryRow}>
-                <View style={styles.metric}>
-                  <Text style={styles.metricLabel}>Repaid</Text>
-                  <Text style={styles.metricValue}>
-                    ₹{summary.totalRepaid.toLocaleString("en-IN")}
-                  </Text>
+        <FlatList
+          data={loans}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} />
+          }
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View>
+              {/* Dark Navy Hero Summary Card with faint glow border */}
+              <LinearGradient
+                colors={[colors.heroStart, colors.heroEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroCard}
+              >
+                <Text style={styles.heroEyebrow}>OVERVIEW</Text>
+                <Text style={styles.heroLabel}>Total Lent</Text>
+                <Text style={styles.heroAmount}>
+                  ₹{summary.totalLent.toLocaleString("en-IN")}
+                </Text>
+
+                <View style={styles.heroRow}>
+                  {/* Total Repaid Stat */}
+                  <View style={styles.heroMetric}>
+                    <Text style={styles.heroMetricLabel}>Total Repaid</Text>
+                    <Text style={styles.heroMetricValue}>
+                      ₹{summary.totalRepaid.toLocaleString("en-IN")}
+                    </Text>
+                  </View>
+
+                  {/* Overdue Stat */}
+                  <View style={styles.heroMetric}>
+                    <Text style={styles.heroMetricLabel}>Overdue</Text>
+                    <Text style={styles.heroOverdueValue}>
+                      ₹{summary.overdueAmount.toLocaleString("en-IN")}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.metric}>
-                  <Text style={styles.metricLabel}>Overdue</Text>
-                  <Text style={styles.overdueValue}>
-                    ₹{summary.overdueAmount.toLocaleString("en-IN")}
-                  </Text>
-                </View>
+              </LinearGradient>
+
+              {/* Section Header */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Your loans</Text>
+                <Text style={styles.sectionCount}>{loans.length} entries</Text>
               </View>
             </View>
-
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Your loans</Text>
-              <Text style={styles.count}>{loans.length} entries</Text>
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyEmoji}>📋</Text>
+              <Text style={styles.emptyTitle}>No loans yet</Text>
+              <Text style={styles.emptyCaption}>
+                Add your first entry to start tracking money you've lent.
+              </Text>
             </View>
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No loans yet</Text>
-            <Text style={styles.muted}>
-              Add your first entry to start tracking money you've lent.
-            </Text>
-          </View>
-        }
-        renderItem={({ item }) => {
-          const isOverdue =
-            item.status === "PENDING" &&
-            new Date(item.dueDate).getTime() < Date.now();
+          }
+          renderItem={({ item }) => {
+            const isOverdue =
+              item.status === "PENDING" &&
+              new Date(item.dueDate).getTime() < Date.now();
 
-          return (
-            <View
-              style={[
-                styles.loanCard,
-                isOverdue && styles.overdueCard,
-              ]}
-            >
-              <View style={styles.loanTop}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
-                    {item.friendName.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
+            return (
+              <View
+                style={[
+                  styles.loanCard,
+                  isOverdue && styles.overdueCard,
+                ]}
+              >
+                {/* Top Row: Avatar, Friend Name, Status Badge */}
+                <View style={styles.cardHeaderRow}>
+                  <View style={styles.friendCol}>
+                    <View
+                      style={[
+                        styles.avatar,
+                        isOverdue && styles.avatarOverdue,
+                        item.status === "REPAID" && styles.avatarRepaid,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.avatarText,
+                          isOverdue && styles.avatarTextOverdue,
+                          item.status === "REPAID" && styles.avatarTextRepaid,
+                        ]}
+                      >
+                        {item.friendName.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={styles.nameBlock}>
+                      <Text style={styles.metaLabel}>FRIEND</Text>
+                      <Text style={styles.friendName}>{item.friendName}</Text>
+                    </View>
+                  </View>
 
-                <View style={styles.loanInfo}>
-                  <Text style={styles.friend}>{item.friendName}</Text>
-                  <Text style={styles.dueDate}>
-                    Due {new Date(item.dueDate).toLocaleDateString("en-IN")}
-                  </Text>
-                </View>
-
-                <View style={styles.amountInfo}>
-                  <Text style={styles.amount}>
-                    ₹{Number(item.amount).toLocaleString("en-IN")}
-                  </Text>
-                  <Text
+                  {/* Status Tag */}
+                  <View
                     style={[
-                      styles.status,
-                      isOverdue && styles.overdueStatus,
-                      item.status === "REPAID" && styles.repaidStatus,
+                      styles.statusBadge,
+                      isOverdue && styles.statusBadgeOverdue,
+                      item.status === "REPAID" && styles.statusBadgeRepaid,
                     ]}
                   >
-                    {item.status === "REPAID"
-                      ? "Repaid"
-                      : isOverdue
-                        ? "Overdue"
-                        : "Pending"}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.statusText,
+                        isOverdue && styles.statusTextOverdue,
+                        item.status === "REPAID" && styles.statusTextRepaid,
+                      ]}
+                    >
+                      {item.status === "REPAID"
+                        ? "Repaid"
+                        : isOverdue
+                          ? "Overdue"
+                          : "Pending"}
+                    </Text>
+                  </View>
                 </View>
+
+                {/* Divider */}
+                <View style={styles.cardDivider} />
+
+                {/* Bottom Row with Label-Above-Value pattern */}
+                <View style={styles.cardValuesRow}>
+                  <View style={styles.valueBlock}>
+                    <Text style={styles.metaLabel}>DUE DATE</Text>
+                    <Text style={[styles.metaValue, isOverdue && styles.metaValueOverdue]}>
+                      {new Date(item.dueDate).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.valueBlock, styles.alignRight]}>
+                    <Text style={styles.metaLabel}>AMOUNT</Text>
+                    <Text style={styles.boldAmount}>
+                      ₹{Number(item.amount).toLocaleString("en-IN")}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Check button to mark as repaid */}
+                {item.status === "PENDING" && (
+                  <TouchableOpacity
+                    style={styles.repayBtn}
+                    onPress={() => markRepaid(item.id)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.checkIconCircle}>
+                      <Text style={styles.checkIconText}>✓</Text>
+                    </View>
+                    <Text style={styles.repayBtnText}>Mark as repaid</Text>
+                  </TouchableOpacity>
+                )}
               </View>
+            );
+          }}
+        />
 
-              {item.status === "PENDING" && (
-                <TouchableOpacity
-                  style={styles.repayButton}
-                  onPress={() => markRepaid(item.id)}
-                >
-                  <Text style={styles.repayText}>Mark as repaid</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          );
-        }}
-      />
-
-      <TouchableOpacity style={styles.addButton} onPress={onAddLoan}>
-        <Text style={styles.addButtonText}>+ Add a loan</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+        {/* Bottom Full-Width Green CTA Button */}
+        <View style={styles.fabContainer}>
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={onAddLoan}
+            activeOpacity={0.88}
+          >
+            <Text style={styles.fabText}>+ Add a loan</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7F5" },
+  gradientFill: { flex: 1 },
+  container: { flex: 1 },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F7F5",
   },
+  loadingText: {
+    ...typography.caption,
+    marginTop: spacing.sm,
+  },
+
+  /* Header */
   header: {
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 18,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   eyebrow: {
-    color: "#64756C",
+    ...typography.eyebrow,
+  },
+  title: {
+    ...typography.title,
+    marginTop: spacing.xs,
+  },
+  logoutPill: {
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm - 2,
+    backgroundColor: colors.cardBg,
+    ...shadows.card,
+  },
+  logoutText: {
+    ...typography.label,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+
+  /* List */
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 110,
+    flexGrow: 1,
+  },
+
+  /* Hero Summary Card */
+  heroCard: {
+    borderRadius: radii.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.heroGlow,
+    ...shadows.hero,
+  },
+  heroEyebrow: {
     fontSize: 10,
     fontWeight: "700",
+    color: colors.heroEyebrow,
     letterSpacing: 1.5,
+    marginBottom: 2,
   },
-  title: { fontSize: 28, fontWeight: "800", color: "#173F35", marginTop: 4 },
-  logout: {
-    borderWidth: 1,
-    borderColor: "#D8E2DC",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  heroLabel: {
+    color: colors.heroMuted,
+    fontSize: 13,
+    fontWeight: "500",
   },
-  logoutText: { color: "#365B4E", fontWeight: "600" },
-  listContent: { paddingHorizontal: 20, paddingBottom: 100, flexGrow: 1 },
-  summaryCard: {
-    backgroundColor: "#173F35",
-    borderRadius: 22,
-    padding: 22,
-    marginBottom: 26,
+  heroAmount: {
+    ...typography.heroAmount,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
   },
-  summaryLabel: { color: "#D0E1D7", fontSize: 14 },
-  total: {
-    color: "#FFFFFF",
-    fontSize: 36,
-    fontWeight: "800",
-    marginTop: 8,
-    marginBottom: 24,
+  heroRow: {
+    flexDirection: "row",
+    gap: spacing.sm + 2,
   },
-  summaryRow: { flexDirection: "row", gap: 12 },
-  metric: {
+  heroMetric: {
     flex: 1,
-    backgroundColor: "#285547",
-    borderRadius: 13,
-    padding: 12,
+    backgroundColor: colors.heroMetricBg,
+    borderRadius: radii.md,
+    padding: spacing.md - 2,
+    borderWidth: 1,
+    borderColor: colors.heroMetricBorder,
   },
-  metricLabel: { color: "#D0E1D7", fontSize: 12 },
-  metricValue: {
-    color: "#FFFFFF",
-    fontSize: 17,
+  heroMetricLabel: {
+    color: colors.heroMuted,
+    fontSize: 11,
+    fontWeight: "500",
+  },
+  heroMetricValue: {
+    color: colors.textWhite,
+    fontSize: 16,
     fontWeight: "700",
-    marginTop: 6,
+    marginTop: spacing.xs,
   },
-  overdueValue: {
-    color: "#FFD1A8",
-    fontSize: 17,
+  heroOverdueValue: {
+    color: colors.heroOverdue,
+    fontSize: 16,
     fontWeight: "700",
-    marginTop: 6,
+    marginTop: spacing.xs,
   },
+
+  /* Section header */
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 14,
+    marginBottom: spacing.md,
   },
-  sectionTitle: { fontSize: 20, fontWeight: "800", color: "#1B332A" },
-  count: { fontSize: 12, color: "#748078" },
+  sectionTitle: { ...typography.sectionTitle },
+  sectionCount: { ...typography.caption },
+
+  /* Loan cards (16px radius, subtle border) */
   loanCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 17,
-    padding: 15,
-    marginBottom: 12,
+    backgroundColor: colors.cardBg,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: "#E5EBE6",
+    borderColor: colors.cardBorder,
+    ...shadows.card,
   },
-  overdueCard: { borderColor: "#E5A078", backgroundColor: "#FFF9F5" },
-  loanTop: { flexDirection: "row", alignItems: "center" },
+  overdueCard: {
+    borderColor: colors.dangerBorder,
+    backgroundColor: colors.cardOverdueBg,
+  },
+
+  /* Card Header */
+  cardHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  friendCol: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  nameBlock: {
+    marginLeft: spacing.sm + 2,
+  },
+  friendName: {
+    ...typography.body,
+    marginTop: 2,
+  },
+
+  /* Avatar */
   avatar: {
-    width: 43,
-    height: 43,
-    borderRadius: 14,
-    backgroundColor: "#E1EDE5",
+    width: sizes.avatarSize,
+    height: sizes.avatarSize,
+    borderRadius: radii.md,
+    backgroundColor: colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { fontSize: 18, fontWeight: "800", color: "#245B45" },
-  loanInfo: { flex: 1, marginLeft: 12 },
-  friend: { fontSize: 15, fontWeight: "700", color: "#20372D" },
-  dueDate: { fontSize: 12, color: "#7B867F", marginTop: 5 },
-  amountInfo: { alignItems: "flex-end" },
-  amount: { fontSize: 16, fontWeight: "800", color: "#20372D" },
-  status: {
-    marginTop: 5,
-    color: "#8A6A29",
+  avatarOverdue: { backgroundColor: colors.dangerLight },
+  avatarRepaid: { backgroundColor: colors.successLight },
+  avatarText: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: colors.primary,
+  },
+  avatarTextOverdue: { color: colors.danger },
+  avatarTextRepaid: { color: colors.success },
+
+  /* Status Badge */
+  statusBadge: {
+    backgroundColor: colors.badgeWarningBg,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+  },
+  statusBadgeOverdue: { backgroundColor: colors.dangerLight },
+  statusBadgeRepaid: { backgroundColor: colors.successLight },
+  statusText: {
     fontSize: 11,
     fontWeight: "700",
+    color: colors.badgeWarningText,
   },
-  overdueStatus: { color: "#B64E23" },
-  repaidStatus: { color: "#24714B" },
-  repayButton: {
-    marginTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "#EDF0ED",
-    paddingTop: 12,
+  statusTextOverdue: { color: colors.danger },
+  statusTextRepaid: { color: colors.success },
+
+  /* Divider */
+  cardDivider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginVertical: spacing.md - 4,
   },
-  repayText: { color: "#176B52", fontWeight: "700", textAlign: "center" },
-  empty: {
-    padding: 28,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 17,
-    alignItems: "center",
+
+  /* Values Row: Label-above-value pattern */
+  cardValuesRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
   },
-  emptyTitle: {
-    fontSize: 17,
+  valueBlock: {
+    flex: 1,
+  },
+  alignRight: {
+    alignItems: "flex-end",
+  },
+  metaLabel: {
+    fontSize: 10,
     fontWeight: "700",
-    color: "#20372D",
-    marginBottom: 7,
+    color: colors.textMuted,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
-  muted: { color: "#7B867F", marginTop: 8, textAlign: "center" },
-  addButton: {
-    position: "absolute",
-    bottom: 16,
-    left: 20,
-    right: 20,
-    backgroundColor: "#176B52",
-    paddingVertical: 16,
-    borderRadius: 15,
+  metaValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  metaValueOverdue: {
+    color: colors.danger,
+    fontWeight: "700",
+  },
+  boldAmount: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.textPrimary,
+    marginTop: 2,
+  },
+
+  /* Repay Button */
+  repayBtn: {
+    marginTop: spacing.md - 2,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    paddingTop: spacing.sm + 2,
+    flexDirection: "row",
     alignItems: "center",
-    elevation: 4,
+    justifyContent: "center",
+    gap: spacing.xs + 2,
   },
-  addButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  checkIconCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: radii.full,
+    backgroundColor: colors.successLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkIconText: {
+    color: colors.success,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  repayBtnText: {
+    color: colors.success,
+    fontWeight: "700",
+    fontSize: 13,
+  },
+
+  /* Empty state */
+  emptyCard: {
+    padding: spacing.xl,
+    backgroundColor: colors.cardBg,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    alignItems: "center",
+    ...shadows.card,
+  },
+  emptyEmoji: { fontSize: 32, marginBottom: spacing.sm },
+  emptyTitle: {
+    ...typography.sectionTitle,
+    marginBottom: spacing.xs,
+  },
+  emptyCaption: {
+    ...typography.caption,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+
+  /* Floating CTA */
+  fabContainer: {
+    position: "absolute",
+    bottom: spacing.md,
+    left: spacing.lg,
+    right: spacing.lg,
+  },
+  fab: {
+    backgroundColor: colors.success,
+    height: sizes.buttonHeight,
+    borderRadius: radii.md,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.button,
+  },
+  fabText: {
+    ...typography.button,
+    fontSize: 16,
+    fontWeight: "800",
+  },
 });

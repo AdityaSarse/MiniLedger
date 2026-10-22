@@ -6,12 +6,14 @@ import {
   Text,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import * as SecureStore from "expo-secure-store";
 
 import { apiRequest } from "../src/api/client";
 import LoginScreen from "../src/screens/LoginScreen";
 import DashboardScreen from "../src/screens/DashboardScreen";
 import AddLoanScreen from "../src/screens/AddLoanScreen";
+import { colors, typography, spacing } from "../src/theme";
 
 export default function Index() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -68,17 +70,22 @@ export default function Index() {
 
   if (checkingSession) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#176B52" />
-          <Text style={styles.loadingText}>Loading MiniLedger...</Text>
-        </View>
-      </SafeAreaView>
+      <LinearGradient
+        colors={[colors.bgGradientTop, colors.bgGradientBottom]}
+        style={styles.gradientFill}
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading MiniLedger…</Text>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {!loggedIn ? (
         <LoginScreen onLogin={() => setLoggedIn(true)} />
       ) : showAddLoan ? (
@@ -93,14 +100,17 @@ export default function Index() {
           onAddLoan={() => setShowAddLoan(true)}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientFill: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F5F7F5",
+    backgroundColor: colors.bgScreen,
   },
   loading: {
     flex: 1,
@@ -108,7 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   loadingText: {
-    marginTop: 12,
-    color: "#64756C",
+    ...typography.caption,
+    marginTop: spacing.md,
   },
 });

@@ -1,129 +1,200 @@
 # MiniLedger — Personal Loan Tracker
 
-A full-stack mobile application that helps users track money lent to friends, monitor due dates, record repayments, and view outstanding balances.
+<div align="center">
 
-MiniLedger is built with React Native and Expo on the frontend, Node.js and Express on the backend, and PostgreSQL with Prisma ORM for data persistence.
+![MiniLedger Banner](mobile/baner.png)
+
+### *Keep money and friendships crystal clear.*
+
+A full-stack, mobile-first fintech application engineered to track money lent to friends, monitor due dates, record repayments, and view real-time outstanding balances.
+
+[![React Native](https://img.shields.io/badge/React_Native-0.88-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo_SDK-58-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma_ORM-6.x-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Vitest](https://img.shields.io/badge/Tests-12_Passed-22C55E?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+
+</div>
 
 ---
 
-## Features
+## 📌 Overview
 
-- **Phone authentication**: Mock OTP-based login with JWT authentication.
-- **Loan management**: Create and view personal loan records.
-- **Repayment tracking**: Mark pending loans as repaid.
-- **Overdue detection**: Identify pending loans past their due dates.
-- **Financial summary**: View total amount lent, total amount repaid, and overdue amount.
-- **User data isolation**: Authenticated users can access only their own loan records.
-- **Session persistence**: Securely store the authentication token on the mobile device.
-- **Input validation**: Validate phone numbers, loan amounts, and due dates.
-- **API security**: Helmet security headers, request-size limits, and protected routes.
-- **Automated tests**: Backend API tests using Vitest and Supertest.
+Lending money to friends often creates awkward tracking situations, forgotten due dates, and lost ledgers. **MiniLedger** eliminates this friction with a focused personal loan tracker designed around simplicity, transparency, and data integrity.
+
+Built with a modern fintech aesthetic inspired by clean digital wallets, MiniLedger provides instant financial clarity through an interactive summary card, real-time overdue detection, and single-tap repayment logging.
 
 ---
 
-## Technology Stack
+## 📱 App Preview
 
-| Layer | Technologies |
+<div align="center">
+
+![MiniLedger App Preview](mobile/page.png)
+
+*MiniLedger user journey: phone & OTP verification, dark-navy hero summary dashboard, and streamlined loan creation form.*
+
+</div>
+
+---
+
+## ✨ Key Features
+
+| Feature | Description |
 |---|---|
-| **Mobile frontend** | React Native, Expo, TypeScript |
-| **Backend** | Node.js, Express.js, TypeScript |
-| **Database** | PostgreSQL |
-| **ORM** | Prisma |
-| **Authentication** | Mock OTP, JSON Web Tokens (JWT) |
-| **Validation** | Zod |
-| **Mobile storage** | Expo SecureStore |
-| **Testing** | Vitest, Supertest |
-| **Security** | Helmet |
+| 🔐 **Mock OTP Authentication** | Passwordless phone login with HMAC-hashed OTP verification, resend cooldowns, and maximum-attempt guardrails. |
+| 🛡️ **JWT-Protected API** | Stateless authorization using signed JSON Web Tokens, validating user sessions on every privileged request. |
+| 📊 **Financial Summary Card** | Real-time calculation of **Total Lent**, **Total Repaid**, and **Overdue Amount** directly aggregated in PostgreSQL. |
+| ⏰ **Overdue Detection** | Automated date-comparison logic flags pending loans that have crossed their maturity date with distinct warning indicators. |
+| 👥 **Strict Data Isolation** | Multi-tenant tenant scoping ensures each user strictly views and manages only their own records. |
+| 💳 **One-Tap Repayment** | Mark outstanding loans as repaid instantly with concurrency safeguards preventing duplicate repayment states. |
+| 🔒 **Encrypted Mobile Session** | Secure auth token persistence via device-native keychain storage using `expo-secure-store`. |
+| ✅ **Automated Test Coverage** | 12 automated integration tests verifying authentication, authorization boundaries, validation, and aggregations. |
 
 ---
 
-## Project Structure
+## 🛠️ Technology Stack
+
+### Mobile Client
+- **Framework:** React Native 0.88 with Expo SDK 58 (Expo Router)
+- **Language:** TypeScript 5.x
+- **UI & Layout:** Vanilla React Native StyleSheet with custom Design Token System ([`theme.ts`](mobile/src/theme.ts))
+- **Gradients:** `expo-linear-gradient`
+- **Security & Storage:** `expo-secure-store` (hardware-backed storage)
+- **Networking:** Native fetch with strongly typed wrapper and error discrimination
+
+### Backend API
+- **Runtime:** Node.js (v18+ or v20+) with TypeScript
+- **Framework:** Express.js 5.x
+- **Database & ORM:** PostgreSQL with Prisma ORM 6.x (`@prisma/adapter-pg`)
+- **Validation:** Zod 4.x schema validation on all inputs
+- **Authentication:** HMAC-SHA256 OTP hashing with `timingSafeEqual` and JSON Web Tokens (`jsonwebtoken`)
+- **Security:** Helmet HTTP protection headers, dynamic CORS validation, and 10kb JSON payload size capping
+- **Testing:** Vitest 5.x with Supertest 7.x
+
+---
+
+## 🏗️ Architecture & Project Structure
+
+MiniLedger adheres to a clean client-server architecture with strict separation of concerns:
 
 ```text
 MiniLedger/
-├── Backend/
+├── Backend/                        # Node.js + Express REST API
 │   ├── prisma/
+│   │   ├── migrations/             # Timestamped SQL migrations
+│   │   └── schema.prisma           # Database schema (User, Loan models)
 │   ├── src/
 │   │   ├── lib/
+│   │   │   ├── prisma.ts           # PrismaClient instance & connection pooling
+│   │   │   └── validation.ts       # Zod schemas (phone, OTP, loan payloads)
 │   │   ├── middleware/
+│   │   │   └── authMiddleware.ts   # JWT verification & req.userId attachment
 │   │   ├── routes/
+│   │   │   ├── authRoutes.ts       # /auth/send-otp, /auth/verify-otp
+│   │   │   └── loanRoutes.ts       # /loans, /loans/summary, /loans/:id/repay
 │   │   ├── services/
-│   │   ├── app.ts
-│   │   └── server.ts
+│   │   │   └── authService.ts      # HMAC OTP store, attempt tracker & cooldown
+│   │   ├── app.ts                  # Express configuration, Helmet, CORS & routes
+│   │   └── server.ts               # Network listener bound to 0.0.0.0
 │   ├── tests/
-│   ├── .env.example
+│   │   └── api.test.ts             # 12 Vitest + Supertest integration tests
+│   ├── .env.example                # Backend environment template
 │   └── package.json
-├── mobile/
+│
+├── mobile/                         # React Native / Expo Application
 │   ├── app/
+│   │   ├── _layout.tsx             # Root Expo Router layout
+│   │   └── index.tsx               # Session recovery & screen coordinator
 │   ├── src/
 │   │   ├── api/
-│   │   └── screens/
-│   ├── .env.example
+│   │   │   └── client.ts           # Type-safe API client with SecureStore integration
+│   │   ├── screens/
+│   │   │   ├── LoginScreen.tsx     # Phone + individual OTP digit boxes
+│   │   │   ├── DashboardScreen.tsx # Navy hero card, loan list, and repaid actions
+│   │   │   └── AddLoanScreen.tsx   # Label-above-input loan creation form
+│   │   └── theme.ts                # Centralized design tokens (colors, typography, radii)
+│   ├── banner.png                  # Repository hero banner
+│   ├── page.png                    # App preview collage
+│   ├── .env.example                # Mobile environment template
 │   └── package.json
-├── .gitignore
-└── README.md
+│
+├── .gitignore                      # Comprehensive root Git exclusions
+└── README.md                       # Project documentation
 ```
 
 ---
 
-## Prerequisites
+## 📋 Prerequisites
 
-Install the following before running the project:
-- **Node.js and npm** (v18+ or v20+)
-- **PostgreSQL**
-- **Expo Go** on your mobile phone
+Ensure the following tools are installed on your workstation before setup:
+
+- **Node.js** (v18.0.0 or v20.x LTS) & **npm** (v9+)
+- **PostgreSQL** (v14+ running locally or via Docker)
+- **Expo Go** app installed on your physical iOS or Android mobile device
 - **Git**
 
 ---
 
-## Getting Started
+## 🚀 Installation & Local Setup
 
-### 1. Clone the repository
+### 1. Clone Repository
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
+git clone https://github.com/AdityaSarse/MiniLedger.git
 cd MiniLedger
 ```
-*(Replace `YOUR_GITHUB_REPOSITORY_URL` with your actual GitHub repository URL.)*
 
-### 2. Configure the backend
+---
+
+### 2. Configure & Run Backend
+
+#### A. Install Backend Dependencies
 ```bash
 cd Backend
 npm install
 ```
-Create a `.env` file using `.env.example` as a reference.
 
-Configure the following variables:
-```env
-DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/miniledger?schema=public
-PORT=5000
-JWT_SECRET=your_random_jwt_secret
-OTP_HASH_SECRET=your_different_random_otp_secret
-OTP_EXPIRY_MINUTES=5
-CORS_ORIGINS=
+#### B. Setup Environment Variables
+Create a `.env` file in the `Backend` directory:
+```bash
+cp .env.example .env
 ```
-Use your local PostgreSQL credentials. URL-encode special characters in the database password when required.
 
-### 3. Set up the database
-Create a PostgreSQL database named `miniledger`.
+Configure your local database credentials and cryptographic secrets:
+```env
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/miniledger?schema=public"
+PORT=5000
+JWT_SECRET="replace_with_a_long_random_jwt_secret_key"
+OTP_HASH_SECRET="replace_with_a_different_random_secret_for_otp_hashing"
+OTP_EXPIRY_MINUTES=5
+CORS_ORIGINS=""
+```
 
-Apply the existing migrations:
+> [!TIP]
+> If your PostgreSQL password contains special symbols (such as `@`, `#`, or `/`), make sure to URL-encode them in the `DATABASE_URL`.
+
+#### C. Database Migration & Prisma Generation
+Create the `miniledger` database in PostgreSQL, then apply migrations:
 ```bash
 npx prisma migrate deploy
 npx prisma generate
 ```
-*(If you are setting up a fresh development database and no migration exists yet, create the initial migration using your Prisma development workflow.)*
 
-### 4. Start the backend
+#### D. Start Backend Server
 ```bash
 npm run dev
 ```
-The API should run on port 5000, unless another port is configured.
 
-**Health check:**
-```http
-GET http://localhost:5000/health
+The backend server starts on port `5000` listening on `0.0.0.0` (all network interfaces).
+
+Verify the health check in your browser or terminal:
+```bash
+curl http://localhost:5000/health
 ```
-Expected response:
+**Expected Response:**
 ```json
 {
   "status": "ok",
@@ -131,127 +202,232 @@ Expected response:
 }
 ```
 
-### 5. Configure the mobile application
-Open another terminal:
+---
+
+### 3. Configure & Run Mobile Application
+
+#### A. Install Mobile Dependencies
+Open a second terminal window:
 ```bash
 cd mobile
 npm install
 ```
-Create `mobile/.env`:
+
+#### B. Setup Environment Variables
+Create a `.env` file in the `mobile` directory:
+```bash
+cp .env.example .env
+```
+
+Set the backend API URL using your computer's **Local Network IP address**:
 ```env
-EXPO_PUBLIC_API_URL=http://YOUR_COMPUTER_LAN_IP:5000
+EXPO_PUBLIC_API_URL=http://192.168.1.100:5000
 ```
-Replace `YOUR_COMPUTER_LAN_IP` with your computer's current local network IP address (check via `ipconfig` on Windows).
 
-For a physical phone, connect the phone and computer to the same Wi-Fi network. Ensure the backend is listening on `0.0.0.0` and that your firewall permits the connection.
+> [!IMPORTANT]
+> **Connecting from a physical phone:**
+> 1. Connect both your development computer and your mobile phone to the **same Wi-Fi network**.
+> 2. Find your computer's LAN IP:
+>    - **Windows:** Run `ipconfig` in PowerShell and look for `IPv4 Address` under your active Wi-Fi adapter (e.g., `192.168.x.x` or `10.x.x.x`).
+>    - **macOS / Linux:** Run `ifconfig` or `ip a`.
+> 3. Replace `192.168.1.100` in `mobile/.env` with your actual LAN IP.
+> 4. Ensure Windows Defender Firewall allows incoming connections on port `5000`.
 
-### 6. Run the mobile app
+#### C. Launch Expo Development Server
 ```bash
-npx expo start
+npx expo start --clear
 ```
-Scan the QR code using **Expo Go**.
+
+Open **Expo Go** on your phone:
+- **Android:** Scan the QR code shown in your terminal.
+- **iOS:** Open the native Camera app and tap the Expo banner.
 
 ---
 
-## API Documentation
+## 📡 API Reference
 
-All protected loan endpoints require a valid JWT:
+All protected endpoints require an `Authorization` header containing a valid Bearer token:
 ```http
-Authorization: Bearer YOUR_JWT_TOKEN
+Authorization: Bearer <your_jwt_token>
 ```
 
-### Authentication
+### Authentication Endpoints
 
-| Method | Endpoint | Description | Authentication |
-|---|---|---|---|
-| `POST` | `/auth/send-otp` | Request a mock OTP | No |
-| `POST` | `/auth/verify-otp` | Verify OTP and receive a JWT | No |
-| `GET` | `/auth/me` | Validate the current session | Yes |
+#### 1. Request OTP
+- **Method:** `POST`
+- **Path:** `/auth/send-otp`
+- **Auth Required:** No
+- **Request Body:**
+  ```json
+  {
+    "phone": "+919876543210"
+  }
+  ```
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "message": "OTP sent successfully"
+  }
+  ```
+- **Terminal Output (Mock Delivery):**
+  ```text
+  [MiniLedger] Mock OTP for +919876543210: 482915
+  ```
 
-**Example: Request an OTP (`POST /auth/send-otp`)**
-```json
-{
-  "phone": "+919876543210"
-}
-```
+#### 2. Verify OTP & Receive Token
+- **Method:** `POST`
+- **Path:** `/auth/verify-otp`
+- **Auth Required:** No
+- **Request Body:**
+  ```json
+  {
+    "phone": "+919876543210",
+    "otp": "482915"
+  }
+  ```
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "message": "Login successful",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": "cm7d0abc1234567890",
+      "phone": "+919876543210"
+    }
+  }
+  ```
 
-**Example: Verify an OTP (`POST /auth/verify-otp`)**
-```json
-{
-  "phone": "+919876543210",
-  "otp": "123456"
-}
-```
-*Note: The OTP above is an example only. The actual mock OTP is printed in the backend terminal.*
+#### 3. Session Validation
+- **Method:** `GET`
+- **Path:** `/auth/me`
+- **Auth Required:** Yes
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "message": "Authenticated successfully",
+    "userId": "cm7d0abc1234567890"
+  }
+  ```
 
 ---
 
-### Loan Management
+### Loan Management Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/loans` | Create a loan |
-| `GET` | `/loans` | List the authenticated user's loans |
-| `PATCH` | `/loans/:id/repay` | Mark a loan as repaid |
-| `GET` | `/loans/summary` | Retrieve financial summary totals |
+#### 4. Create Loan
+- **Method:** `POST`
+- **Path:** `/loans`
+- **Auth Required:** Yes
+- **Request Body:**
+  ```json
+  {
+    "friendName": "Rahul Sharma",
+    "amount": 2500,
+    "dueDate": "2026-11-30T00:00:00.000Z"
+  }
+  ```
+- **Success Response (`201 Created`):**
+  ```json
+  {
+    "message": "Loan created successfully",
+    "loan": {
+      "id": "loan_cm7d1xyz987654321",
+      "userId": "cm7d0abc1234567890",
+      "friendName": "Rahul Sharma",
+      "amount": "2500.00",
+      "dueDate": "2026-11-30T00:00:00.000Z",
+      "status": "PENDING",
+      "repaidAt": null,
+      "createdAt": "2026-10-23T00:30:00.000Z",
+      "updatedAt": "2026-10-23T00:30:00.000Z"
+    }
+  }
+  ```
 
-**Example: Create a loan (`POST /loans`)**
-```json
-{
-  "friendName": "Rahul",
-  "amount": 1500,
-  "dueDate": "2026-11-15T00:00:00.000Z"
-}
-```
-*The `dueDate` should be a valid ISO 8601 datetime with a timezone offset.*
+#### 5. List Authenticated User's Loans
+- **Method:** `GET`
+- **Path:** `/loans`
+- **Auth Required:** Yes
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "count": 1,
+    "loans": [
+      {
+        "id": "loan_cm7d1xyz987654321",
+        "userId": "cm7d0abc1234567890",
+        "friendName": "Rahul Sharma",
+        "amount": "2500.00",
+        "dueDate": "2026-11-30T00:00:00.000Z",
+        "status": "PENDING",
+        "repaidAt": null,
+        "createdAt": "2026-10-23T00:30:00.000Z"
+      }
+    ]
+  }
+  ```
 
-**Example summary response (`GET /loans/summary`)**
-```json
-{
-  "totalLent": 5000,
-  "totalRepaid": 1500,
-  "overdueAmount": 500
-}
-```
-*The example amounts are illustrative; actual totals depend on the authenticated user's database records.*
+#### 6. Financial Summary Metrics
+- **Method:** `GET`
+- **Path:** `/loans/summary`
+- **Auth Required:** Yes
+- **Calculation Details:**
+  - `totalLent`: Aggregate sum of all loans created by the user (both pending and repaid).
+  - `totalRepaid`: Aggregate sum of loans with `status = "REPAID"`.
+  - `overdueAmount`: Aggregate sum of loans with `status = "PENDING"` and `dueDate < current_timestamp`.
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "totalLent": 7500,
+    "totalRepaid": 5000,
+    "overdueAmount": 2500
+  }
+  ```
+
+#### 7. Mark Loan as Repaid
+- **Method:** `PATCH`
+- **Path:** `/loans/:id/repay`
+- **Auth Required:** Yes
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "message": "Loan marked as repaid",
+    "loan": {
+      "id": "loan_cm7d1xyz987654321",
+      "status": "REPAID",
+      "repaidAt": "2026-10-23T01:00:00.000Z"
+    }
+  }
+  ```
+- **Error Response (`409 Conflict`):** Returned if the loan has already been marked as repaid.
 
 ---
 
-## Financial Calculations
+## 🔒 Security & Architecture Principles
 
-- **Total lent**: Sum of all recorded loans, including loans already repaid.
-- **Total repaid**: Sum of loans marked as repaid.
-- **Overdue amount**: Sum of pending loans whose due dates have passed.
-
-Amounts are stored using PostgreSQL decimal precision to avoid typical floating-point storage errors.
-
----
-
-## Authentication and Security
-
-- OTP verification issues a JWT for authenticated requests.
-- OTPs expire and are intended for one-time use.
-- OTP attempts and resend cooldowns are limited in the mock implementation.
-- Loan operations are scoped to the authenticated user.
-- Helmet adds security-related HTTP headers.
-- Request payload size is limited.
-- Mobile authentication tokens are stored using Expo SecureStore.
-
-> **Important limitation**: This project uses a mock OTP delivered through the backend terminal, not a real SMS provider. Its in-memory OTP storage and rate limiting are suitable only for a limited demonstration, not a horizontally scaled production service. A production deployment should use shared rate limiting, monitoring, secure OTP delivery, HTTPS, and appropriate secret management.
+- **HMAC OTP Storage:** In-memory OTPs are hashed using SHA-256 HMAC with an isolated secret (`OTP_HASH_SECRET`). Plaintext OTPs are never retained in server state.
+- **Timing-Safe Comparison:** OTP hashes are verified using `crypto.timingSafeEqual` to safeguard against timing side-channel attacks.
+- **Brute-Force Protection:** Rate limiting enforces a **60-second resend cooldown** and limits failed verification attempts to **5 tries** before automatic invalidation.
+- **Mock OTP Transparency:** Designed for local evaluation; OTPs are outputted directly to the backend terminal log.
+- **Tenant Isolation:** Every loan query (`SELECT`, `UPDATE`, `AGGREGATE`) is explicitly scoped to `authReq.userId`. Users cannot read or modify another user's loan data.
+- **Defensive HTTP Configuration:** Express uses Helmet for protective HTTP headers and restricts request bodies to `10kb`.
+- **Hardware-Backed Device Storage:** JWTs are stored in iOS Keychain and Android Keystore via `expo-secure-store`, preventing token extraction from disk backups.
 
 ---
 
-## Testing
+## 🧪 Automated Testing
 
-Run the backend tests from the `Backend` directory:
+MiniLedger maintains a comprehensive integration test suite built with **Vitest** and **Supertest**, directly validating the Express application against a dedicated test database (`miniledger_test`).
+
+### Run Tests
 ```bash
-npx vitest run
+cd Backend
+npm test
 ```
 
-**Current test result: 12 tests passing.**
+### Verified Test Suite (12 Passing Tests)
 
 ```text
- ✓ tests/api.test.ts (12 tests)
+ ✓ tests/api.test.ts (12 tests) 284ms
    ✓ MiniLedger API (12)
      ✓ returns a healthy status
      ✓ rejects invalid phone number on send-otp
@@ -265,21 +441,34 @@ npx vitest run
      ✓ marks a loan as repaid
      ✓ returns 409 when loan is repaid twice
      ✓ calculates summary correctly and excludes repaid loans from overdue amount
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
 ```
 
-The tests cover implemented API functionality, including health checks, authentication requirements, loan creation, validation, repayment, and summary calculations.
+---
 
-*Use a dedicated test database (`miniledger_test`) when running integration tests that create or delete database records.*
+## 🗺️ Known Limitations & Future Roadmap
+
+- [ ] **Production SMS Gateway:** Transition mock OTP console delivery to a live SMS provider (Twilio, AWS SNS, or Firebase Auth).
+- [ ] **Distributed Cache:** Migrate in-memory OTP stores and rate limits to Redis for horizontal backend clustering.
+- [ ] **Push Reminders:** Implement Expo push notifications to proactively alert lenders 24 hours prior to a loan's due date.
+- [ ] **Partial Repayments:** Support installment-based repayments with an audit log of micro-payments.
+- [ ] **Receipt & Proof Upload:** Attach transaction screenshots or UPI payment receipts to loans via cloud object storage (S3/R2).
+- [ ] **Export Records:** Generate monthly PDF or CSV ledger statements for download.
 
 ---
 
-## Future Improvements
+## 👤 Author
 
-- Real SMS OTP integration
-- Receipt photo upload
-- Pagination and search
-- Push notifications for upcoming due dates
-- Deployment with managed PostgreSQL
-- Expanded security and integration testing
+**Aditya Sarse**
+- GitHub: [@AdityaSarse](https://github.com/AdityaSarse)
+- Project Repository: [AdityaSarse/MiniLedger](https://github.com/AdityaSarse/MiniLedger)
 
 ---
+
+---
+
+## 📄 License
+
+This project was developed as a take-home assignment.
