@@ -283,9 +283,3 @@ The tests cover implemented API functionality, including health checks, authenti
 - Expanded security and integration testing
 
 ---
-
-## License
-
-This project was developed as a take-home assignment. Add a license only if you intend to distribute the project under its terms.
-
----
