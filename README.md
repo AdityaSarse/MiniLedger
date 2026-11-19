@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![MiniLedger Banner](mobile/baner.png)
+![MiniLedger Banner](mobile/baner.png) 
 
 ### *Keep money and friendships crystal clear.*
 
