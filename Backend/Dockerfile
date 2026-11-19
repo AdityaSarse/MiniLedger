@@ -13,7 +13,7 @@ RUN npm ci
 COPY . .
 
 # Generate Prisma Client
-RUN npx prisma generate
+# RUN npx prisma generate
 
 # Application port
 EXPOSE 5000
