@@ -1,14 +1,16 @@
+
 name: ci
 
-on: 
+on:
   push:
-    branches: main
+    branches: [main]
 
 jobs:
-  code:
+  build-and-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v6
 
       - name: Login to Docker Hub
@@ -16,12 +18,15 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          
-      - name: docker build and push
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ./Backend
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/app:latest
-
-      
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/miniledger:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/miniledger:${{ github.sha }}
