@@ -9,7 +9,7 @@ router.post("/send-otp", async (req, res) => {
 
   if (!parsed.success) {
     return res.status(400).json({
-      message: "Invalid phone number",
+      message: parsed.error.issues[0]?.message || "Invalid phone number",
       errors: parsed.error.issues,
     });
   }
@@ -17,8 +17,9 @@ router.post("/send-otp", async (req, res) => {
   try {
     const result = await sendOtp(parsed.data.phone);
     return res.status(200).json(result);
-  } catch {
-    return res.status(500).json({ message: "Could not send OTP" });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not send OTP";
+    return res.status(400).json({ message });
   }
 });
 

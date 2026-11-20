@@ -18,6 +18,17 @@ interface LoginScreenProps {
   onLogin: () => void;
 }
 
+function normalizePhone(raw: string): string {
+  const cleaned = raw.trim().replace(/[\s-]/g, "");
+  if (/^\d{10}$/.test(cleaned)) {
+    return `+91${cleaned}`;
+  }
+  if (!cleaned.startsWith("+") && /^\d+$/.test(cleaned)) {
+    return `+${cleaned}`;
+  }
+  return cleaned;
+}
+
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -43,18 +54,25 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const handleSendOtp = async () => {
     setError(null);
-    if (!phone.trim()) {
+    const cleanedPhone = normalizePhone(phone);
+    if (!cleanedPhone) {
       setError("Please enter your phone number");
       return;
     }
 
     setLoading(true);
     try {
-      await authApi.sendOtp(phone.trim());
+      await authApi.sendOtp(cleanedPhone);
+      setPhone(cleanedPhone);
       setOtpSent(true);
       setResendTimer(30);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send OTP");
+      const msg = err instanceof Error ? err.message : "Failed to send OTP";
+      setError(
+        msg === "NETWORK_ERROR"
+          ? "Unable to connect to server. Ensure backend is running."
+          : msg
+      );
     } finally {
       setLoading(false);
     }
@@ -62,6 +80,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
   const handleVerifyOtp = async () => {
     setError(null);
+    const cleanedPhone = normalizePhone(phone);
     if (!otp.trim() || otp.length < 6) {
       setError("Please enter the 6-digit OTP");
       return;
@@ -69,10 +88,15 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
     setLoading(true);
     try {
-      await authApi.verifyOtp(phone.trim(), otp.trim());
+      await authApi.verifyOtp(cleanedPhone, otp.trim());
       onLogin();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to verify OTP");
+      const msg = err instanceof Error ? err.message : "Failed to verify OTP";
+      setError(
+        msg === "NETWORK_ERROR"
+          ? "Unable to connect to server. Ensure backend is running."
+          : msg
+      );
     } finally {
       setLoading(false);
     }

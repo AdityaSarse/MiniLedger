@@ -12,8 +12,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as SecureStore from "expo-secure-store";
-import { apiRequest } from "../api/client";
+import { apiRequest, getToken, clearToken } from "../api/client";
 import { colors, typography, spacing, radii, shadows, sizes } from "../theme";
 
 type Props = {
@@ -57,7 +56,7 @@ export default function AddLoanScreen({ onBack, onCreated }: Props) {
       return;
     }
 
-    const token = await SecureStore.getItemAsync("miniledger_token");
+    const token = await getToken();
 
     if (!token) {
       Alert.alert("Session expired", "Please log in again.");
@@ -84,7 +83,7 @@ export default function AddLoanScreen({ onBack, onCreated }: Props) {
       onCreated();
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
-        await SecureStore.deleteItemAsync("miniledger_token");
+        await clearToken();
         Alert.alert("Session expired", "Please log in again.");
         onBack();
         return;

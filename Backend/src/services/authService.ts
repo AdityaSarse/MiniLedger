@@ -46,7 +46,8 @@ export async function sendOtp(phone: string) {
   const existing = otpStore.get(phone);
 
   if (existing && now < existing.nextAllowedAt) {
-    throw new Error("Please wait before requesting another OTP");
+    const remainingSec = Math.ceil((existing.nextAllowedAt - now) / 1000);
+    throw new Error(`Please wait ${remainingSec}s before requesting another OTP`);
   }
 
   const otp = randomInt(100000, 1000000).toString();
@@ -58,10 +59,14 @@ export async function sendOtp(phone: string) {
     attempts: 0,
   });
 
-  // Required for the mock OTP assignment. Never log OTPs in production.
+  // Log mock OTP clearly for developers
+  console.log(`\n========================================`);
   console.log(`[MiniLedger] Mock OTP for ${phone}: ${otp}`);
+  console.log(`========================================\n`);
 
-  return { message: "OTP sent successfully" };
+  return {
+    message: "OTP sent successfully",
+  };
 }
 
 export async function verifyOtp(phone: string, otp: string) {

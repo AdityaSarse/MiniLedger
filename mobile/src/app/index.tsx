@@ -7,9 +7,7 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as SecureStore from "expo-secure-store";
-
-import { apiRequest } from "../api/client";
+import { apiRequest, getToken, clearToken } from "../api/client";
 import LoginScreen from "../screens/LoginScreen";
 import DashboardScreen from "../screens/DashboardScreen";
 import AddLoanScreen from "../screens/AddLoanScreen";
@@ -26,7 +24,7 @@ export default function Index() {
 
     async function restoreSession() {
       try {
-        const token = await SecureStore.getItemAsync("miniledger_token");
+        const token = await getToken();
 
         if (!token) return;
 
@@ -42,7 +40,7 @@ export default function Index() {
           error instanceof Error &&
           error.message === "UNAUTHORIZED"
         ) {
-          await SecureStore.deleteItemAsync("miniledger_token");
+          await clearToken();
         }
       } finally {
         if (active) {

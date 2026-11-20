@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
   RefreshControl,
   SafeAreaView,
   StyleSheet,
@@ -11,9 +12,8 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import * as SecureStore from "expo-secure-store";
 import { useFocusEffect } from "expo-router";
-import { apiRequest } from "../api/client";
+import { apiRequest, getToken, clearToken } from "../api/client";
 import { colors, typography, spacing, radii, shadows, sizes } from "../theme";
 
 type Loan = {
@@ -47,7 +47,7 @@ export default function DashboardScreen({
   const [refreshing, setRefreshing] = useState(false);
 
   const loadDashboard = useCallback(async () => {
-    const token = await SecureStore.getItemAsync("miniledger_token");
+    const token = await getToken();
 
     if (!token) {
       onLogout();
@@ -69,7 +69,7 @@ export default function DashboardScreen({
       loadDashboard()
         .catch(async (error) => {
           if (error instanceof Error && error.message === "UNAUTHORIZED") {
-            await SecureStore.deleteItemAsync("miniledger_token");
+            await clearToken();
             onLogout();
             return;
           }
@@ -92,7 +92,7 @@ export default function DashboardScreen({
       await loadDashboard();
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
-        await SecureStore.deleteItemAsync("miniledger_token");
+        await clearToken();
         onLogout();
         return;
       }
@@ -110,7 +110,7 @@ export default function DashboardScreen({
   }
 
   async function markRepaid(id: string) {
-    const token = await SecureStore.getItemAsync("miniledger_token");
+    const token = await getToken();
     if (!token) {
       onLogout();
       return;
@@ -121,7 +121,7 @@ export default function DashboardScreen({
       await loadDashboard();
     } catch (error) {
       if (error instanceof Error && error.message === "UNAUTHORIZED") {
-        await SecureStore.deleteItemAsync("miniledger_token");
+        await clearToken();
         onLogout();
         return;
       }
@@ -137,13 +137,20 @@ export default function DashboardScreen({
   }
 
   function logout() {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm("Are you sure you want to log out?")) {
+        clearToken().then(onLogout);
+      }
+      return;
+    }
+
     Alert.alert("Log out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Log out",
         style: "destructive",
         onPress: async () => {
-          await SecureStore.deleteItemAsync("miniledger_token");
+          await clearToken();
           onLogout();
         },
       },

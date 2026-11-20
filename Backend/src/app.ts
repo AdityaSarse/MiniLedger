@@ -11,8 +11,7 @@ const app = express();
 
 app.use(helmet());
 
-// Configure an explicit origin if you have a known client origin.
-// Native React Native requests do not normally send browser CORS headers.
+// Configure allowed origins
 const allowedOrigins = (process.env.CORS_ORIGINS ?? "")
   .split(",")
   .map((origin) => origin.trim())
@@ -21,14 +20,26 @@ const allowedOrigins = (process.env.CORS_ORIGINS ?? "")
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow requests without an Origin header, such as native apps
-      // and local command-line tools.
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests without an Origin header (such as native apps, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      // Check explicit allowed origins if configured
+      if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow local development origins (localhost, 127.0.0.1, LAN IPs)
+      if (
+        allowedOrigins.length === 0 ||
+        process.env.NODE_ENV !== "production" ||
+        /^http:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin)
+      ) {
         return callback(null, true);
       }
 
       return callback(new Error("Origin not allowed by CORS"));
     },
+    credentials: true,
   })
 );
 

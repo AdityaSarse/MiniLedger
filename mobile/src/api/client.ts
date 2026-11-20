@@ -1,16 +1,57 @@
+import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-if (!API_URL) {
-  throw new Error("EXPO_PUBLIC_API_URL is missing");
-}
 
 const TOKEN_KEY = "miniledger_token";
 
+export const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === "web") {
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          return window.localStorage.getItem(key);
+        }
+      } catch (e) {
+        console.error("Error reading from localStorage:", e);
+      }
+      return null;
+    }
+    return await SecureStore.getItemAsync(key);
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === "web") {
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.setItem(key, value);
+        }
+      } catch (e) {
+        console.error("Error saving to localStorage:", e);
+      }
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  },
+
+  async deleteItem(key: string): Promise<void> {
+    if (Platform.OS === "web") {
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.removeItem(key);
+        }
+      } catch (e) {
+        console.error("Error removing from localStorage:", e);
+      }
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
+};
+
 export async function setToken(token: string) {
   try {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
+    await storage.setItem(TOKEN_KEY, token);
   } catch (e) {
     console.error("Error saving token:", e);
   }
@@ -18,7 +59,7 @@ export async function setToken(token: string) {
 
 export async function getToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync(TOKEN_KEY);
+    return await storage.getItem(TOKEN_KEY);
   } catch (e) {
     console.error("Error reading token:", e);
     return null;
@@ -27,10 +68,18 @@ export async function getToken(): Promise<string | null> {
 
 export async function clearToken() {
   try {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await storage.deleteItem(TOKEN_KEY);
   } catch (e) {
     console.error("Error removing token:", e);
   }
+}
+
+function getApiUrl(): string {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    const hostname = window.location.hostname || "localhost";
+    return `http://${hostname}:5000`;
+  }
+  return process.env.EXPO_PUBLIC_API_URL || "http://10.151.162.79:5000";
 }
 
 export async function apiRequest<T>(
@@ -41,9 +90,10 @@ export async function apiRequest<T>(
   let response: Response;
 
   const authToken = token || (await getToken());
+  const baseUrl = getApiUrl();
 
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(`${baseUrl}${path}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +101,8 @@ export async function apiRequest<T>(
         ...options.headers,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error(`API request failed to ${baseUrl}${path}:`, err);
     throw new Error("NETWORK_ERROR");
   }
 
